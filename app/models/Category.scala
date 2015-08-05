@@ -8,5 +8,5 @@ import java.util.UUID
 case class Category (
                     id: UUID,
                     name: String,
-                    cards: Seq[Card]
+                    cards: List[Card]
                       )

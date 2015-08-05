@@ -1,13 +1,17 @@
-import org.specs2._
+import java.util.UUID
+import org.specs2.mutable._
+import models.Category
+import repositories.CardRepository
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
  * Created by Lapanti on 04/08/15.
  */
 class HelloTest extends Specification {
-  def is = s2"""
 
- This is my first specification
-   it is working                 $ok
-   really working!               $ok
-                                 """
+  "The get" should {
+    "not throw an error" in {
+    CardRepository.getCards(Category(UUID.randomUUID(), "", List())).onComplete(println(_))
+    }
+  }
 }
