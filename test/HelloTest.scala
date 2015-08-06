@@ -1,6 +1,7 @@
 import java.util.UUID
 import org.specs2.mutable._
 import models.Category
+import play.api.test.WithApplication
 import repositories.CardRepository
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -10,8 +11,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class HelloTest extends Specification {
 
   "The get" should {
-    "not throw an error" in {
-    CardRepository.getCards(Category(UUID.randomUUID(), "", List())).onComplete(println(_))
+    "not throw an error" in new WithApplication {
+      CardRepository.getAll.onComplete(println(_))
+      true must beTrue
     }
   }
 }
