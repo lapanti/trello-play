@@ -49,7 +49,7 @@ object OAuth2 extends Controller {
     } yield {
         if (state == oauthState) {
           oauth2.getToken(code).map { accessToken =>
-            Redirect(util.routes.OAuth2.success()).withSession("oauth-token" -> accessToken)
+            Redirect(utils.routes.OAuth2.success()).withSession("oauth-token" -> accessToken)
           }.recover {
             case ex: IllegalStateException => Unauthorized(ex.getMessage)
           }
