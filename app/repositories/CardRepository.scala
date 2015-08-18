@@ -14,7 +14,7 @@ import play.api.Play.current
  */
 object CardRepository extends TrelloRepository {
   val logger = Logger(this.getClass)
-  private val getCardsUrl = BASE_URL + "/cards?key=" + KEY + "&fields=name,idList,url"
+  private val getCardsUrl = BASE_URL + "/cards?key=" + APP_KEY + "&token=" + TOKEN + "&fields=name,idList,url"
 
   private def get(url: String): Future[Option[WSResponse]] = {
     WS.url(url).get().map(response => {

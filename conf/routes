@@ -3,8 +3,7 @@
 # ~~~~
 
 # Home page
-GET        /        controllers.Application.index
+GET        /                              controllers.Application.index
 
 # OAuth2 Stuff
-GET        /_oauth-callback        utils.OAuth2.callback(code: Option[String], state: Option[String])
-GET        /_oauth-success         utils.OAuth2.success
+GET        /authorize                     utils.TrelloOAuth.authorize()
