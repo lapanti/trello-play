@@ -3,7 +3,8 @@
 # ~~~~
 
 # Home page
-GET        /                              controllers.Application.index
+GET        /                 controllers.Application.index()
+GET        /cards            controllers.Application.cards(category: Option[String])
 
-# OAuth2 Stuff
-GET        /authorize                     utils.TrelloOAuth.authorize()
+# OAuth Stuff
+GET        /authorize        utils.TrelloOAuth.authorize()

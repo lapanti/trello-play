@@ -1,7 +1,6 @@
 package utils
 
 import utils.Global._
-import play.api.Play
 import play.api.libs.oauth.{RequestToken, ServiceInfo, OAuth, ConsumerKey}
 import play.api.mvc.{RequestHeader, Action, Controller}
 

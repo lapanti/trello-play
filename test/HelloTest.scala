@@ -12,8 +12,8 @@ class HelloTest extends Specification {
 
   "The get" should {
     "not throw an error" in new WithApplication {
-      CardRepository.getAll.onComplete(println(_))
-      true must beTrue
+      val cards = CardRepository.getAll
+      cards.size mustNotEqual 0
     }
   }
 }
