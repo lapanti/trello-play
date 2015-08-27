@@ -1,5 +1,6 @@
 package repositories
 
+import play.api.mvc.Results
 import utils.Global._
 import models.{TrelloId, Category, Card}
 import play.api.libs.ws._
@@ -52,5 +53,18 @@ object CardRepository extends TrelloRepository {
         None
     }
     Await.result(cardOpt, 5000 millis)
+  }
+
+  def changeCategory(cardId: TrelloId, categoryId: TrelloId): Boolean = {
+    val queryString = Seq("key" -> APP_KEY, "token" -> TOKEN, "value" -> categoryId.toString)
+    val putResult = WS.url(getCardUrl + cardId + "/idList").withQueryString(queryString:_*).put(Results.EmptyContent()).map{ response =>
+      println(response.status)
+      response.status == 200
+    }.recover{
+      case error: Throwable =>
+        error.printStackTrace()
+        false
+    }
+    Await.result(putResult, 5000 millis)
   }
 }
