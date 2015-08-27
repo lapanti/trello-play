@@ -19,52 +19,49 @@ object CardRepository extends TrelloRepository {
   private val getCardsUrl = BASE_URL + "/boards/" + BOARD_ID + "/cards"
   private val getCardUrl = BASE_URL + "/cards/"
 
-  def getAll: List[Card] = {
-    val queryString = Seq("key" -> APP_KEY, "token" -> TOKEN, "fields" -> "name,idList,url")
-    val cards = WS.url(getCardsUrl).withQueryString(queryString:_*).get().map{ response =>
-      response.json.as[List[Card]]
+  private def getParams(params: (String, String)*): Seq[(String, String)] = {
+    Seq("key" -> APP_KEY, "token" -> TOKEN) ++ params
+  }
+
+  private def getWSRequest(url: String, queryString: Seq[(String, String)]): WSRequest = {
+    WS.url(url).withQueryString(queryString:_*)
+  }
+
+  private def get[B](url: String, queryString: Seq[(String, String)], f: WSResponse => B, errorCase: B): B = {
+    val finalResp = getWSRequest(url, getParams(queryString:_*)).get().map{ response =>
+      f(response)
     }.recover{
       case error: Throwable =>
         error.printStackTrace()
-        Nil
+        errorCase
     }
-    Await.result(cards, 5000 millis)
+    Await.result(finalResp, 5000 millis)
+  }
+
+  private def put[B](url: String, queryString: Seq[(String, String)], f: WSResponse => B, errorCase: B): B = {
+    val finalResp = getWSRequest(url, getParams(queryString:_*)).put(Results.EmptyContent()).map{ response =>
+      f(response)
+    }.recover{
+      case error: Throwable =>
+        error.printStackTrace()
+        errorCase
+    }
+    Await.result(finalResp, 5000 millis)
+  }
+
+  def getAll: List[Card] = {
+    get(getCardsUrl, Seq("fields" -> "name,idList,url"), _.json.as[List[Card]], Nil)
   }
 
   def getCards(category: Category): List[Card] = {
-    val queryString = Seq("key" -> APP_KEY, "token" -> TOKEN, "fields" -> "name,idList,url")
-    val cards = WS.url(getCardsUrl).withQueryString(queryString:_*).get().map{ response =>
-      response.json.as[List[Card]].filter(_.categoryId == category.id)
-    }.recover{
-      case error: Throwable =>
-        error.printStackTrace()
-        Nil
-    }
-    Await.result(cards, 5000 millis)
+    get(getCardsUrl, Seq("fields" -> "name,idList,url"), _.json.as[List[Card]].filter(_.categoryId == category.id), Nil)
   }
 
   def getCard(cardId: TrelloId): Option[Card] = {
-    val queryString = Seq("key" -> APP_KEY, "token" -> TOKEN, "fields" -> "name,idList,url")
-    val cardOpt = WS.url(getCardUrl + cardId).withQueryString(queryString:_*).get().map{ response =>
-      response.json.asOpt[Card]
-    }.recover{
-      case error: Throwable =>
-        error.printStackTrace()
-        None
-    }
-    Await.result(cardOpt, 5000 millis)
+    get(getCardUrl + cardId, Seq("fields" -> "name,idList,url"), _.json.asOpt[Card], None)
   }
 
   def changeCategory(cardId: TrelloId, categoryId: TrelloId): Boolean = {
-    val queryString = Seq("key" -> APP_KEY, "token" -> TOKEN, "value" -> categoryId.toString)
-    val putResult = WS.url(getCardUrl + cardId + "/idList").withQueryString(queryString:_*).put(Results.EmptyContent()).map{ response =>
-      println(response.status)
-      response.status == 200
-    }.recover{
-      case error: Throwable =>
-        error.printStackTrace()
-        false
-    }
-    Await.result(putResult, 5000 millis)
+    put(getCardUrl + cardId + "/idList", Seq("value" -> categoryId.toString), _.status == 200, false)
   }
 }
