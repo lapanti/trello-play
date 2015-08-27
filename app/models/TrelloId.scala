@@ -7,6 +7,13 @@ import play.api.libs.json._
  */
 class TrelloId private(id: String) {
   override def toString = id
+
+  override def equals(other: Any) = {
+    other match {
+      case otherId: TrelloId => otherId.toString == id
+      case _ => false
+    }
+  }
 }
 
 object TrelloId {
