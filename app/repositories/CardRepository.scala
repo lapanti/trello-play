@@ -1,10 +1,11 @@
 package repositories
 
+import play.api.mvc.Results
 import utils.Global._
 import models.{TrelloId, Category, Card}
 import play.api.libs.ws._
 import play.api.Logger
-import scala.concurrent.Await
+import scala.concurrent.{Future, Await}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -15,42 +16,41 @@ import play.api.Play.current
  */
 object CardRepository extends TrelloRepository {
   val logger = Logger(this.getClass)
-  private val getCardsUrl = BASE_URL + "/boards/" + BOARD_ID + "/cards"
-  private val getCardUrl = BASE_URL + "/cards/"
+  private val multipleCardsUrl = BASE_URL + "/boards/" + BOARD_ID + "/cards"
+  private val singleCardUrl = BASE_URL + "/cards/"
 
-  def getAll: List[Card] = {
-    val queryString = Seq("key" -> APP_KEY, "token" -> TOKEN, "fields" -> "name,idList,url")
-    val cards = WS.url(getCardsUrl).withQueryString(queryString:_*).get().map{ response =>
-      response.json.as[List[Card]]
+  private def httpRequest[B](url: String, queryString: Seq[(String, String)], requestType: WSRequest => Future[WSResponse], handleResponse: WSResponse => B, errorCase: B): B = {
+    val finalResp = requestType(WS.url(url).withQueryString(queryString ++ Seq("key" -> APP_KEY, "token" -> TOKEN):_*)).map{ response =>
+      handleResponse(response)
     }.recover{
       case error: Throwable =>
         error.printStackTrace()
-        Nil
+        errorCase
     }
-    Await.result(cards, 5000 millis)
+    Await.result(finalResp, 5000 millis)
+  }
+
+  private def get[B](url: String, queryString: Seq[(String, String)], handleResponse: WSResponse => B, errorCase: B): B = {
+    httpRequest(url, queryString, _.get(), handleResponse, errorCase)
+  }
+
+  private def put[B](url: String, queryString: Seq[(String, String)], handleResponse: WSResponse => B, errorCase: B): B = {
+    httpRequest(url, queryString, _.put(Results.EmptyContent()), handleResponse, errorCase)
+  }
+
+  def getAll: List[Card] = {
+    get(multipleCardsUrl, Seq("fields" -> "name,idList,url"), _.json.as[List[Card]], Nil)
   }
 
   def getCards(category: Category): List[Card] = {
-    val queryString = Seq("key" -> APP_KEY, "token" -> TOKEN, "fields" -> "name,idList,url")
-    val cards = WS.url(getCardsUrl).withQueryString(queryString:_*).get().map{ response =>
-      response.json.as[List[Card]].filter(_.categoryId == category.id)
-    }.recover{
-      case error: Throwable =>
-        error.printStackTrace()
-        Nil
-    }
-    Await.result(cards, 5000 millis)
+    get(multipleCardsUrl, Seq("fields" -> "name,idList,url"), _.json.as[List[Card]].filter(_.categoryId == category.id), Nil)
   }
 
   def getCard(cardId: TrelloId): Option[Card] = {
-    val queryString = Seq("key" -> APP_KEY, "token" -> TOKEN, "fields" -> "name,idList,url")
-    val cardOpt = WS.url(getCardUrl + cardId).withQueryString(queryString:_*).get().map{ response =>
-      response.json.asOpt[Card]
-    }.recover{
-      case error: Throwable =>
-        error.printStackTrace()
-        None
-    }
-    Await.result(cardOpt, 5000 millis)
+    get(singleCardUrl + cardId, Seq("fields" -> "name,idList,url"), _.json.asOpt[Card], None)
+  }
+
+  def changeCategory(cardId: TrelloId, categoryId: TrelloId): Boolean = {
+    put(singleCardUrl + cardId + "/idList", Seq("value" -> categoryId.toString), _.status == 200, false)
   }
 }
