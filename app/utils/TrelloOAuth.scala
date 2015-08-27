@@ -6,13 +6,14 @@ import play.api.mvc.{RequestHeader, Action, Controller}
 
 object TrelloOAuth extends Controller {
 
-  val KEY = ConsumerKey(APP_KEY, APP_SECRET)
+  private val KEY = ConsumerKey(APP_KEY, APP_SECRET)
+  private val use10a = true
 
-  val TRELLO = OAuth(ServiceInfo(
+  private val TRELLO = OAuth(ServiceInfo(
     "https://trello.com/1/OAuthGetRequestToken",
     "https://trello.com/1/OAuthGetAccessToken",
-    "https://trello.com/1/OAuthAuthorizeToken", KEY),
-  false)
+    "https://trello.com/1/OAuthAuthorizeToken?name=AR-Storyboard&scope=read,write&expiration=never", KEY),
+    use10a)
 
   def authorize() = Action {
     implicit request =>
