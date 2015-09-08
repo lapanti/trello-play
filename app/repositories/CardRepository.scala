@@ -12,7 +12,7 @@ import scala.language.postfixOps
 import play.api.Play.current
 
 /**
- * Created by Lapanti on 04/08/15.
+ * Created by Lapanti on 04/08/15
  */
 object CardRepository extends TrelloRepository {
   val logger = Logger(this.getClass)
