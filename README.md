@@ -1,5 +1,5 @@
-# AR-Storyboard
-Open source application to integrate a physical storyboard (using a webcam) to a Trello board
+# trello-play
+Simple PoC of using Trello Api with a Scala Play 2 backend
 
 ### Installation
   * `cp conf/application-example.conf conf/application.conf`
